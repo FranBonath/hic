@@ -179,6 +179,10 @@
                 "save_aligned_intermediates": {
                     "type": "boolean",
                     "description": "Save all BAM files during two-steps mapping"
+                },
+                "bwa": {
+                    "type": "boolean",
+                    "description": "Align to genome using BWA"
                 }
             }
         },
@@ -335,6 +339,10 @@
                 "skip_multiqc": {
                     "type": "boolean",
                     "description": "Do not generate MultiQC report"
+                },
+                "qc_only": {
+                    "type": "boolean",
+                    "description": "Only do mapping (using bwa) and run pairtools for basic QC stats"
                 }
             }
         },
