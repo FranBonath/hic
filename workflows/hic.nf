@@ -35,6 +35,17 @@ if (params.digestion){
    exit 1, "Ligation motif not found. Please either use the `--digestion` parameters or specify the `--restriction_site` and `--ligation_site`. For DNase Hi-C, please use '--dnase' option"
 }
 
+// Check for QC run
+if (params.qc_only){
+  params.skip_mcool = true
+  params.skip_balancing = true
+  params.skip_compartments = true
+  params.skip_tads = true
+  params.skip_dist_decay = true
+  params.skip_maps = true
+  params.bwa = true
+}
+
 //****************************************
 // Combine all maps resolution for downstream analysis
 
@@ -120,6 +131,7 @@ include { TADS } from '../subworkflows/local/tads'
 //
 include { FASTQC                      } from '../modules/nf-core/fastqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
+include { BWA_MEM } from '../modules/nf-core/bwa/mem/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -172,17 +184,19 @@ workflow HIC {
   //
   // SUB-WORFLOW: HiC-Pro
   //
-  INPUT_CHECK.out.reads.view()
-  HICPRO (
-    INPUT_CHECK.out.reads,
-    PREPARE_GENOME.out.index,
-    PREPARE_GENOME.out.res_frag,
-    PREPARE_GENOME.out.chromosome_size,
-    ch_ligation_site,
-    ch_map_res
-  )
-  ch_versions = ch_versions.mix(HICPRO.out.versions)
-
+  if(!params.qc_only){
+    INPUT_CHECK.out.reads.view()
+      HICPRO (
+        INPUT_CHECK.out.reads,
+        PREPARE_GENOME.out.index,
+        PREPARE_GENOME.out.res_frag,
+        PREPARE_GENOME.out.chromosome_size,
+        ch_ligation_site,
+        ch_map_res
+      )
+      ch_versions = ch_versions.mix(HICPRO.out.versions)
+  }
+  
   //
   // SUB-WORKFLOW: COOLER
   //
@@ -192,6 +206,13 @@ workflow HIC {
     ch_map_res
   )
   ch_versions = ch_versions.mix(COOLER.out.versions)
+
+  //
+  // MODULE: BWA
+  //
+  if (params.bwa){
+    //not sure what comes here yet
+  }
 
   //
   // MODULE: HICEXPLORER/HIC_PLOT_DIST_VS_COUNTS
